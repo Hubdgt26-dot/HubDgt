@@ -1,4 +1,4 @@
-Copyright (c) 2026 [Tu Nombre o Nombre de tu Marca]
+Copyright (c) 2026 [Hub Dgt]
 
 Todos los derechos reservados.
 
@@ -26,10 +26,10 @@ derechos de autor del titular y puede dar lugar a las acciones legales
 correspondientes conforme a la Ley Federal del Derecho de Autor (México) y
 tratados internacionales aplicables.
 
-Para solicitar autorización de uso, contacta a: [tu email o contacto]
+Para solicitar autorización de uso, contacta a:[hubdgt26@gmail.com]
 
 ---
 
-Fecha de creación / primera publicación: [fecha]
+Fecha de creación / primera publicación: [Agosto 2026]
 Este archivo, junto con el historial de commits de este repositorio, sirve
 como evidencia de autoría y fecha de creación de la obra.
