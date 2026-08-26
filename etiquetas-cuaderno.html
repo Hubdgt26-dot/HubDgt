@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generador de Etiquetas para Cuadernos | Crea, Personaliza e Imprime</title>
+<meta name="description" content="Crea etiquetas personalizadas para cuadernos escolares: agrega nombre, materia, grado, foto y colores desde el navegador. Imprime o guarda en PDF a tamaño carta, sin instalar nada.">
+<meta name="keywords" content="etiquetas para cuadernos, etiquetas escolares imprimibles, etiquetas personalizadas, generador de etiquetas, etiquetas tamaño carta, útiles escolares">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#173238">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Generador de Etiquetas para Cuadernos">
+<meta property="og:description" content="Personaliza, imprime y organiza las etiquetas de los cuadernos del colegio. Gratis, sin registro y sin instalar nada.">
+<meta property="og:locale" content="es_ES">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Generador de Etiquetas para Cuadernos",
+  "applicationCategory": "DesignApplication",
+  "operatingSystem": "Cualquiera (navegador web)",
+  "description": "Herramienta gratuita para crear, personalizar e imprimir etiquetas de cuadernos escolares en tamaño carta.",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
+<style>
+  :root{
+    --petroleo:#17333b;
+    --petroleo-2:#0f2226;
+    --tinta:#20302e;
+    --teal:#2c8c86;
+    --teal-deep:#1f6a65;
+    --sage:#b7c8ac;
+    --sage-strong:#748a63;
+    --hueso:#f6f1e3;
+    --hueso-2:#efe6cf;
+    --dorado:#c9a24e;
+    --dorado-deep:#a9803a;
+    --blanco:#fffdf8;
+    --font-display: Georgia, 'Palatino Linotype', 'Book Antiqua', 'Iowan Old Style', serif;
+    --font-ui: 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+    --radius: 10px;
+
+    /* Tipografías seleccionables para el texto de la etiqueta */
+    --f-clasica: Georgia, 'Times New Roman', Times, serif;
+    --f-elegante: 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+    --f-moderna: 'Segoe UI', Helvetica, Arial, sans-serif;
+    --f-geometrica: 'Century Gothic', 'Trebuchet MS', sans-serif;
+    --f-manuscrita: 'Segoe Print', 'Bradley Hand', 'Comic Sans MS', cursive;
+
+    /* Tamaños base del texto de la etiqueta (se multiplican por --escala) */
+    --fs-materia: 1.02rem;  /* +2pt respecto al tamaño anterior (.85rem) */
+    --fs-nombre: .82rem;
+    --fs-meta: .66rem;
+    --fs-frase: .77rem;     /* +2pt respecto al tamaño anterior (.6rem) */
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--hueso);
+    color: var(--tinta);
+    font-family: var(--font-ui);
+    line-height:1.45;
+  }
+  h1,h2,h3{ font-family: var(--font-display); color: var(--petroleo); margin:0 0 .3rem; }
+  a{ color: var(--teal-deep); }
+  button{ font-family: inherit; cursor:pointer; }
+
+  /* ---------- Encabezado ---------- */
+  .topbar{
+    background: linear-gradient(135deg, var(--petroleo), var(--petroleo-2));
+    color: var(--hueso);
+    padding: 1.4rem 1.6rem;
+    display:flex; align-items:center; gap: .9rem;
+    border-bottom: 4px solid var(--dorado);
+  }
+  .topbar__mark{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:48px; height:48px; border-radius:50%;
+    background: var(--dorado);
+    color: var(--petroleo-2);
+    font-size:1.4rem; flex:none;
+    box-shadow: 0 0 0 3px rgba(246,241,227,.25);
+  }
+  .topbar h1{ color:var(--blanco); font-size:1.4rem; }
+  .topbar p{ margin:0; color: var(--sage); font-size:.92rem; }
+  .volver-hub{ margin-left:auto; flex:none; color: var(--sage); text-decoration:none; font-size:.85rem; opacity:.9; white-space:nowrap; }
+  .volver-hub:hover{ opacity:1; text-decoration:underline; }
+
+  /* ---------- Layout ---------- */
+  .layout{
+    max-width:1280px; margin:0 auto;
+    padding: 1.6rem;
+    display:grid;
+    grid-template-columns: 380px 1fr;
+    gap: 1.8rem;
+    align-items:start;
+  }
+  @media (max-width: 920px){
+    .layout{ grid-template-columns: 1fr; }
+  }
+
+  .panel, .preview{
+    background: var(--blanco);
+    border: 1px solid var(--hueso-2);
+    border-radius: var(--radius);
+    padding: 1.3rem 1.3rem 1.6rem;
+    box-shadow: 0 2px 10px rgba(23,51,59,.06);
+  }
+  .panel h2, .preview h2{ font-size:1.05rem; border-bottom:2px solid var(--teal); padding-bottom:.4rem; margin-bottom: 1rem;}
+
+  fieldset{ border:none; padding:0; margin:0 0 1.3rem; }
+  legend{ font-family:var(--font-display); color:var(--petroleo); font-size:.98rem; margin-bottom:.5rem; padding:0; }
+
+  label{ display:block; font-size:.82rem; color: var(--tinta); font-weight:600; margin: .6rem 0 .25rem; }
+  input[type="text"], input[type="number"], select, textarea{
+    width:100%; padding:.5rem .6rem;
+    border:1px solid var(--sage);
+    border-radius:6px;
+    background: var(--hueso);
+    color: var(--tinta);
+    font-family: inherit;
+    font-size:.92rem;
+  }
+  input:focus, select:focus, textarea:focus, button:focus-visible{
+    outline: 2px solid var(--dorado);
+    outline-offset:1px;
+  }
+
+  .fila-doble{ display:grid; grid-template-columns:1fr 1fr; gap:.7rem; }
+
+  /* Imagen */
+  .img-box{ display:flex; align-items:center; gap:.8rem; margin-top:.5rem; }
+  .img-box__preview{
+    width:56px; height:56px; border-radius:50%;
+    object-fit:cover; border:2px solid var(--teal);
+    background: var(--sage); display:none;
+  }
+  #imagen-circulo-preview{
+    width: clamp(30px, var(--circulo-tam, 56px), 100px);
+    height: clamp(30px, var(--circulo-tam, 56px), 100px);
+  }
+  .img-box__preview.activa{ display:block; }
+  .btn-mini{
+    border:1px solid var(--sage-strong); background:var(--blanco); color:var(--tinta);
+    padding:.35rem .6rem; border-radius:6px; font-size:.78rem;
+  }
+  .btn-mini:hover{ background: var(--hueso-2); }
+
+  .campo-ayuda{ font-size:.78rem; color:var(--sage-strong); margin:.7rem 0 0; }
+
+  /* Materias */
+  .materia-card{
+    border: 1px solid var(--hueso-2); border-radius: 8px;
+    padding: .5rem .55rem; margin-bottom: .5rem;
+    background: var(--hueso);
+  }
+  .materia-card__top{
+    display:flex; align-items:center; gap:.4rem;
+  }
+  .materia-card__top input[type="text"]{ flex:1; margin:0; }
+  .materia-card__opciones{
+    display:flex; align-items:center; gap:.45rem; margin-top:.45rem; flex-wrap:wrap;
+  }
+  .color-materia{
+    -webkit-appearance:none; appearance:none;
+    width:34px; height:34px; padding:2px;
+    border:1px solid var(--sage); border-radius:6px;
+    background:var(--hueso); cursor:pointer; flex:none;
+  }
+  .color-materia::-webkit-color-swatch-wrapper{ padding:2px; }
+  .color-materia::-webkit-color-swatch{ border:none; border-radius:4px; }
+  .color-materia:disabled{ opacity:.4; cursor:not-allowed; filter:grayscale(60%); }
+
+  .mini-thumb{
+    position:relative; display:flex; align-items:center; justify-content:center;
+    width: clamp(28px, var(--circulo-tam, 34px), 90px);
+    height: clamp(28px, var(--circulo-tam, 34px), 90px);
+    border-radius:50%; flex:none;
+    border: 1.5px dashed var(--sage-strong);
+    background: var(--hueso-2); cursor:pointer; overflow:hidden;
+  }
+  .mini-thumb img{ width:100%; height:100%; object-fit:cover; }
+  .mini-thumb__icono{ color:var(--sage-strong); font-weight:700; font-size:1rem; }
+  .mini-thumb.tiene-propia{ border-style:solid; border-color:var(--dorado); }
+  .mini-thumb input[type="file"]{
+    position:absolute; inset:0; width:100%; height:100%;
+    opacity:0; cursor:pointer;
+  }
+  .chip{
+    display:inline-block; font-size:.74rem; padding:.28rem .55rem;
+    border-radius:999px; border:1px solid var(--teal);
+    background: var(--hueso); color: var(--teal-deep);
+    cursor:pointer; margin:.2rem .3rem .2rem 0;
+  }
+  .chip:hover{ background: var(--teal); color:var(--blanco); }
+  .chips-wrap{ margin-top:.4rem; }
+  .btn-quitar{
+    border:none; background:transparent; color:var(--petroleo);
+    font-size:1.1rem; line-height:1; border-radius:6px; padding:.2rem;
+  }
+  .btn-quitar:hover{ color:#a33; }
+  .btn-agregar{
+    margin-top:.3rem; width:100%;
+    border:1px dashed var(--teal-deep); background:var(--hueso);
+    color:var(--teal-deep); padding:.5rem; border-radius:6px; font-size:.85rem; font-weight:600;
+  }
+  .btn-agregar:hover{ background:var(--hueso-2); }
+
+  .checkline{ display:flex; align-items:center; gap:.5rem; margin-top:.3rem; }
+  .checkline input{ width:auto; }
+  .checkline label{ margin:0; font-weight:500; }
+
+  /* Selector de color tipo pastilla (paleta básica) */
+  .radio-grupo{ display:flex; gap:.5rem; margin-top:.4rem; flex-wrap:wrap; }
+  .radio-opcion{
+    display:flex; align-items:center; gap:.3rem;
+    border:1px solid var(--sage); border-radius:6px;
+    padding:.3rem .55rem; font-size:.8rem; cursor:pointer;
+  }
+  .radio-opcion input{ width:auto; margin:0; }
+  .radio-opcion:has(input:checked){ background:var(--hueso-2); border-color: var(--teal-deep); }
+
+  /* ---------- Barra de acciones ---------- */
+  .toolbar{
+    display:flex; flex-wrap:wrap; gap:.6rem; align-items:center;
+    margin-bottom:1.1rem;
+  }
+  .btn{
+    padding:.6rem 1rem; border-radius:8px; border:none;
+    font-weight:700; font-size:.88rem; letter-spacing:.2px;
+  }
+  .btn-primario{ background: var(--dorado); color: var(--petroleo-2); }
+  .btn-primario:hover{ background: var(--dorado-deep); }
+  .btn-secundario{ background: var(--petroleo); color: var(--hueso); }
+  .btn-secundario:hover{ background: var(--petroleo-2); }
+  .btn-fantasma{ background:transparent; color:var(--tinta); border:1px solid var(--sage-strong); }
+  .btn-fantasma:hover{ background: var(--hueso); }
+  .toolbar__nota{ font-size:.78rem; color:var(--sage-strong); margin-left:auto; }
+
+  /* ---------- Hoja carta y etiquetas ---------- */
+  .hoja-wrap{ overflow-x:auto; padding-bottom:.5rem; }
+  .hoja{
+    position:relative;
+    width:100%; max-width:215.9mm;
+    aspect-ratio: 8.5 / 11;
+    margin: 0 auto 1.8rem;
+    background:#fff;
+    box-shadow: 0 4px 18px rgba(23,51,59,.18);
+    padding: 8mm;
+    display:grid;
+    gap: 5mm;
+  }
+  .hoja__pie-impresion{ display:none; }
+  .etiqueta{
+    position:relative;
+    background: var(--hueso);
+    border: 1.5px solid var(--accent, var(--teal));
+    border-radius: 10px;
+    padding: .55rem .65rem .5rem;
+    display:flex; flex-direction:column; justify-content:space-between;
+    overflow:hidden;
+    min-height:0;
+    background-size:cover; background-position:center;
+  }
+  /* Líneas de corte: guía punteada separada del borde de la etiqueta */
+  .hoja.con-cortes .etiqueta{
+    outline: 1.25px dashed var(--sage-strong);
+    outline-offset: 4px;
+  }
+
+  /* Marco decorativo opcional, color de la paleta básica */
+  .hoja.con-marco .etiqueta{
+    box-shadow: 0 0 0 3px var(--blanco), 0 0 0 5px var(--marco-color, var(--dorado));
+  }
+  /* Cuando hay marco decorativo, la línea de corte se aleja para quedar fuera de él */
+  .hoja.con-cortes.con-marco .etiqueta{
+    outline-offset: 9px;
+  }
+
+  .etiqueta__materia{
+    display:block; font-family: var(--fuente, var(--font-display));
+    color: var(--texto-color, var(--petroleo)); font-weight:700;
+    font-size: calc(var(--fs-materia) * var(--escala, 1));
+    border-bottom: 4px solid var(--accent, var(--teal));
+    padding-bottom:.15rem; margin-bottom:.25rem;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .etiqueta__cuerpo{ display:flex; align-items:center; gap:.5rem; flex:1; min-height:0; }
+  .etiqueta__foto{
+    width:var(--circulo-tam, 34px); height:var(--circulo-tam, 34px); border-radius:50%; object-fit:cover;
+    border:2px solid var(--accent, var(--teal)); flex:none; background:var(--sage);
+    box-shadow: 0 0 0 2px rgba(246,241,227,.9);
+  }
+  .etiqueta__monograma{
+    width:var(--circulo-tam, 34px); height:var(--circulo-tam, 34px); border-radius:50%; flex:none;
+    background: var(--accent, var(--teal)); color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-display); font-weight:700; font-size: calc(var(--circulo-tam, 34px) * .32);
+    border:2px solid var(--dorado);
+    box-shadow: 0 0 0 2px rgba(246,241,227,.9);
+  }
+  .etiqueta__datos{ min-width:0; flex:1; }
+  .hoja.negrita .etiqueta__datos,
+  .hoja.negrita .etiqueta__footer{ font-weight:700; }
+  .etiqueta__frase{ margin:0; font-family: var(--fuente, var(--font-ui)); font-size: calc(var(--fs-frase) * var(--escala, 1)); color: var(--texto-color, var(--sage-strong)); letter-spacing:.03em; }
+  .etiqueta__nombre{
+    margin:0; font-family: var(--fuente, var(--font-display)); font-weight:700;
+    color: var(--texto-color, var(--tinta)); font-size: calc(var(--fs-nombre) * var(--escala, 1));
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .etiqueta__meta{ margin:.1rem 0 0; font-family: var(--fuente, var(--font-ui)); font-size: calc(var(--fs-meta) * var(--escala, 1)); color: var(--texto-color, var(--tinta)); opacity:.85;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .etiqueta__footer{
+    display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center;
+    gap:.05rem .4rem;
+    font-size: calc(.6rem * var(--escala, 1));
+    color:var(--texto-color, var(--petroleo)); margin-top:.3rem;
+    border-top: 1px dotted var(--sage-strong); padding-top:.2rem;
+  }
+  .etiqueta__footer span{
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; min-width:0;
+  }
+  .etiqueta__footer span::before{ content:"✦ "; color:var(--dorado); }
+  .etiqueta__footer span:empty{ display:none; }
+
+  /* Columnas más angostas (20 por hoja): footer más compacto para que quepa el teléfono */
+  .hoja.porhoja-20 .etiqueta{ padding: .4rem .45rem .35rem; }
+  .hoja.porhoja-20 .etiqueta__footer{
+    font-size: calc(.48rem * var(--escala, 1));
+    gap:.05rem .25rem; margin-top:.15rem; padding-top:.12rem;
+  }
+
+  /* Alineación de texto (izquierda / centro / derecha) */
+  .hoja.alin-centro .etiqueta__materia,
+  .hoja.alin-centro .etiqueta__frase,
+  .hoja.alin-centro .etiqueta__nombre,
+  .hoja.alin-centro .etiqueta__meta{ text-align:center; }
+  .hoja.alin-centro .etiqueta__cuerpo{ justify-content:center; }
+  .hoja.alin-der .etiqueta__materia,
+  .hoja.alin-der .etiqueta__frase,
+  .hoja.alin-der .etiqueta__nombre,
+  .hoja.alin-der .etiqueta__meta{ text-align:right; }
+  .hoja.alin-der .etiqueta__cuerpo{ justify-content:flex-end; }
+  .hoja.alin-der .etiqueta__cuerpo{ flex-direction:row-reverse; }
+
+  /* Imagen como fondo de la etiqueta, con panel translúcido para legibilidad */
+  /* Panel translúcido opcional para leer el texto sobre la imagen de fondo */
+  .etiqueta--panel .etiqueta__cuerpo{ background: rgba(255,255,255,.78); border-radius:6px; padding:.3rem .4rem; }
+  .etiqueta--panel .etiqueta__materia{ background: rgba(255,255,255,.78); border-radius:4px; padding:.1rem .35rem .15rem; display:inline-block; }
+  .etiqueta--panel .etiqueta__footer{ background: rgba(255,255,255,.78); border-radius:4px; padding:.15rem .35rem; border-top:none; }
+
+  .vacio{
+    text-align:center; padding:2.5rem 1rem; color: var(--sage-strong);
+    border: 2px dashed var(--sage); border-radius: var(--radius);
+  }
+
+  footer.pie{
+    max-width:1280px; margin:0 auto; padding: 0 1.6rem 2rem;
+    font-size:.78rem; color: var(--sage-strong);
+  }
+
+  /* ---------- Impresión ---------- */
+  @media print{
+    @page{ size: letter; margin: 10mm; }
+
+    /* Fuerza a que se impriman colores e imágenes de fondo (los navegadores los omiten por defecto) */
+    *, *::before, *::after{
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
+
+    body{ background:#fff; }
+    .topbar, .panel, .toolbar, footer.pie{ display:none !important; }
+    .layout{ display:block; padding:0; max-width:none; }
+    .preview{ box-shadow:none; border:none; padding:0; }
+    .preview h2{ display:none; }
+    .hoja-wrap{ overflow:visible; }
+    .hoja{
+      width:215.9mm; height:279.4mm; max-width:none; aspect-ratio:auto;
+      box-shadow:none; margin:0; page-break-after: always;
+    }
+    .hoja:last-child{ page-break-after: auto; }
+    .hoja__pie-impresion{
+      display:block; position:absolute; left:0; right:0; bottom:3mm;
+      text-align:center; font-family: var(--font-ui);
+      font-size:8px; letter-spacing:.04em; color:#8a8a8a;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <span class="topbar__mark" aria-hidden="true">&#9998;</span>
+  <div>
+    <h1>Generador de Etiquetas para Cuadernos</h1>
+    <p>Personaliza los datos, sube una foto e imprime a tamaño carta</p>
+  </div>
+  <a class="volver-hub" href="index.html">← Volver a Hub Dgt</a>
+</header>
+
+<main class="layout">
+
+  <!-- ============ FORMULARIO ============ -->
+  <section class="panel" aria-label="Formulario de personalización">
+    <h2>1. Datos de la etiqueta</h2>
+    <form id="form-datos" onsubmit="return false;">
+
+      <fieldset>
+        <legend>Información del estudiante</legend>
+
+        <label for="frase">Frase superior</label>
+        <input type="text" id="frase" maxlength="40" value="Este cuaderno pertenece a">
+
+        <label for="nombre">Nombre completo</label>
+        <input type="text" id="nombre" maxlength="40" placeholder="Ej. Valentina Ríos">
+
+        <div class="fila-doble">
+          <div>
+            <label for="curso">Grado / Curso</label>
+            <input type="text" id="curso" maxlength="20" placeholder="Ej. 4° B">
+          </div>
+          <div>
+            <label for="anio">Año escolar</label>
+            <input type="text" id="anio" maxlength="12">
+          </div>
+        </div>
+
+        <label for="colegio">Colegio / Institución</label>
+        <input type="text" id="colegio" maxlength="40" placeholder="Opcional">
+
+        <label for="telefono">Teléfono de contacto</label>
+        <input type="text" id="telefono" maxlength="20" placeholder="Opcional, por si se pierde">
+      </fieldset>
+
+      <fieldset>
+        <legend>Imagen de fondo</legend>
+        <label for="imagen-fondo">Sube una foto o patrón (opcional)</label>
+        <input type="file" id="imagen-fondo" accept="image/*">
+        <div class="img-box">
+          <img id="imagen-fondo-preview" class="img-box__preview" alt="Vista previa de la imagen de fondo">
+          <button type="button" class="btn-mini" id="btn-quitar-imagen-fondo">Quitar</button>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Imagen del círculo</legend>
+        <label for="imagen-circulo">Sube una foto o logo (opcional)</label>
+        <input type="file" id="imagen-circulo" accept="image/*">
+        <div class="img-box">
+          <img id="imagen-circulo-preview" class="img-box__preview" alt="Vista previa de la imagen del círculo">
+          <button type="button" class="btn-mini" id="btn-quitar-imagen-circulo">Quitar</button>
+        </div>
+        <label for="circulo-tamano">Tamaño del círculo</label>
+        <select id="circulo-tamano">
+          <option value="pequeno">Pequeño</option>
+          <option value="mediano" selected>Mediano</option>
+          <option value="grande">Grande</option>
+          <option value="extra">Extra grande</option>
+        </select>
+        <div class="checkline">
+          <input type="checkbox" id="mostrar-circulo" checked>
+          <label for="mostrar-circulo">Mostrar el círculo en la etiqueta (desactívalo si estorba, por ejemplo con 20 etiquetas por hoja)</label>
+        </div>
+        <div class="checkline">
+          <input type="checkbox" id="circulo-como-fondo">
+          <label for="circulo-como-fondo">Usar también esta imagen como fondo de la etiqueta</label>
+        </div>
+        <p class="campo-ayuda">Si además subiste una imagen en "Imagen de fondo", esa tiene prioridad.</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>Texto y diseño</legend>
+
+        <label for="fuente">Tipo de letra</label>
+        <select id="fuente">
+          <option value="clasica">Clásica (serif)</option>
+          <option value="elegante">Elegante (serif)</option>
+          <option value="moderna" selected>Moderna (sans)</option>
+          <option value="geometrica">Geométrica (sans)</option>
+          <option value="manuscrita">Manuscrita</option>
+        </select>
+
+        <label for="tamanio-texto">Tamaño del texto</label>
+        <select id="tamanio-texto">
+          <option value="pequeno">Pequeño</option>
+          <option value="mediano" selected>Mediano</option>
+          <option value="grande">Grande</option>
+          <option value="extra">Extra grande</option>
+        </select>
+
+        <label for="color-texto">Color del texto</label>
+        <input type="color" id="color-texto" class="color-materia">
+
+        <div class="checkline">
+          <input type="checkbox" id="texto-negrita">
+          <label for="texto-negrita">Texto en negrita</label>
+        </div>
+
+        <label id="label-alineacion">Alineación del texto</label>
+        <div class="radio-grupo" role="radiogroup" aria-labelledby="label-alineacion">
+          <label class="radio-opcion"><input type="radio" name="alineacion" value="izq" checked> Izquierda</label>
+          <label class="radio-opcion"><input type="radio" name="alineacion" value="centro"> Centro</label>
+          <label class="radio-opcion"><input type="radio" name="alineacion" value="der"> Derecha</label>
+        </div>
+
+        <div class="checkline">
+          <input type="checkbox" id="marco-activo">
+          <label for="marco-activo">Agregar marco decorativo</label>
+        </div>
+        <label for="marco-color">Color del marco</label>
+        <input type="color" id="marco-color" class="color-materia">
+
+        <div class="checkline">
+          <input type="checkbox" id="fondo-texto-blanco" checked>
+          <label for="fondo-texto-blanco">Fondo blanco translúcido detrás del texto (para que se lea sobre la imagen de fondo)</label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Materias / Etiquetas</legend>
+        <div id="lista-materias"></div>
+        <button type="button" class="btn-agregar" id="btn-agregar-materia">+ Agregar materia</button>
+        <div class="chips-wrap" aria-label="Materias comunes">
+          <span class="chip" data-materia="Matemáticas">Matemáticas</span>
+          <span class="chip" data-materia="Lengua">Lengua</span>
+          <span class="chip" data-materia="Ciencias">Ciencias</span>
+          <span class="chip" data-materia="Historia">Historia</span>
+          <span class="chip" data-materia="Inglés">Inglés</span>
+          <span class="chip" data-materia="Arte">Arte</span>
+          <span class="chip" data-materia="Música">Música</span>
+          <span class="chip" data-materia="Ed. Física">Ed. Física</span>
+          <span class="chip" data-materia="Computación">Computación</span>
+          <span class="chip" data-materia="Geografía">Geografía</span>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Impresión</legend>
+        <div class="fila-doble">
+          <div>
+            <label for="copias">Copias por materia</label>
+            <input type="number" id="copias" min="1" max="12" value="1">
+          </div>
+          <div>
+            <label for="por-hoja">Etiquetas por hoja</label>
+            <select id="por-hoja">
+              <option value="4">4 (grandes)</option>
+              <option value="6">6</option>
+              <option value="8" selected>8</option>
+              <option value="10">10</option>
+              <option value="12">12</option>
+              <option value="15">15</option>
+              <option value="20">20 (pequeñas)</option>
+            </select>
+          </div>
+        </div>
+        <p class="campo-ayuda" id="tamano-info"></p>
+        <div class="checkline">
+          <input type="checkbox" id="cortes" checked>
+          <label for="cortes">Mostrar líneas de corte punteadas</label>
+        </div>
+      </fieldset>
+    </form>
+  </section>
+
+  <!-- ============ VISTA PREVIA / IMPRESIÓN ============ -->
+  <section class="preview" aria-label="Vista previa e impresión">
+    <h2>2. Vista previa — hoja tamaño carta</h2>
+    <div class="toolbar">
+      <button class="btn btn-primario" id="btn-imprimir">Imprimir / Guardar como PDF</button>
+      <button class="btn btn-fantasma" id="btn-limpiar">Restablecer todo</button>
+      <span class="toolbar__nota">Elige "Guardar como PDF", tamaño Carta, y activa "Gráficos de fondo" si tu app de impresión lo pide, para ver colores e imagen de fondo.</span>
+    </div>
+    <div class="hoja-wrap" id="hojas"></div>
+  </section>
+
+</main>
+
+<footer class="pie">
+  Hecho para imprimirse en casa o en el colegio, tamaño carta (8.5&quot; × 11&quot;). Tus datos se guardan solo en este navegador.
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  var PALETA = [
+    { id:"teal", hex:"#2c8c86", nombre:"Teal" },
+    { id:"dorado", hex:"#c9a24e", nombre:"Dorado" },
+    { id:"sage", hex:"#748a63", nombre:"Sage" },
+    { id:"petroleo", hex:"#17333b", nombre:"Petróleo" }
+  ];
+  var LAYOUTS = {
+    4:{cols:2, rows:2}, 6:{cols:2, rows:3}, 8:{cols:2, rows:4},
+    10:{cols:2, rows:5}, 12:{cols:3, rows:4}, 15:{cols:3, rows:5}, 20:{cols:4, rows:5}
+  };
+  var FUENTES = {
+    clasica: "var(--f-clasica)",
+    elegante: "var(--f-elegante)",
+    moderna: "var(--f-moderna)",
+    geometrica: "var(--f-geometrica)",
+    manuscrita: "var(--f-manuscrita)"
+  };
+  var TAMANIOS = { pequeno: .85, mediano: 1, grande: 1.18, extra: 1.4 };
+  var TAMANIOS_CIRCULO = { pequeno: "36px", mediano: "50px", grande: "68px", extra: "90px" };
+
+  var STORAGE_KEY = "etiquetas-cuaderno-v6";
+  var uid = 0;
+
+  function nuevoId(){ uid += 1; return "m" + Date.now() + uid; }
+
+  function estadoInicial(){
+    return {
+      frase: "Este cuaderno pertenece a",
+      nombre: "",
+      curso: "",
+      anio: String(new Date().getFullYear()),
+      colegio: "",
+      telefono: "",
+      imagenFondo: null,
+      fondoTextoBlanco: true,
+      imagenCirculo: null,
+      mostrarCirculo: true,
+      circuloComoFondo: false,
+      circuloTam: "mediano",
+      copias: 1,
+      porHoja: 8,
+      cortes: true,
+      fuente: "moderna",
+      tamanioTexto: "mediano",
+      textoNegrita: false,
+      colorTexto: "#20302e",
+      alineacion: "izq",
+      marco: { activo: false, color: PALETA[1].hex },
+      materias: [ { id: nuevoId(), texto: "Matemáticas", color: PALETA[0].hex, imagenCirculo: null } ]
+    };
+  }
+
+  var estado = cargarEstado();
+
+  function cargarEstado(){
+    var base = estadoInicial();
+    try{
+      var guardado = localStorage.getItem(STORAGE_KEY);
+      if(guardado){
+        var datos = JSON.parse(guardado);
+        if(datos && Array.isArray(datos.materias) && datos.materias.length){
+          datos.marco = Object.assign({}, base.marco, datos.marco || {});
+          return Object.assign({}, base, datos);
+        }
+      }
+    }catch(e){ /* si falla, usamos el estado por defecto */ }
+    return base;
+  }
+
+  function guardarEstado(){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(estado)); }catch(e){ /* almacenamiento lleno u otro error: se ignora */ }
+  }
+
+  var guardarTimeout = null;
+  function guardarEstadoDebounced(){
+    if(guardarTimeout) clearTimeout(guardarTimeout);
+    guardarTimeout = setTimeout(guardarEstado, 450);
+  }
+
+  function escapar(texto){
+    return String(texto || "").replace(/[&<>"']/g, function(c){
+      return ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" })[c];
+    });
+  }
+
+  // ---------- Referencias ----------
+  var $ = function(id){ return document.getElementById(id); };
+  var elFrase = $("frase"), elNombre = $("nombre"), elCurso = $("curso"),
+      elAnio = $("anio"), elColegio = $("colegio"), elTelefono = $("telefono"),
+      elImagenFondo = $("imagen-fondo"), elImagenFondoPreview = $("imagen-fondo-preview"),
+      elFondoTextoBlanco = $("fondo-texto-blanco"),
+      elTamanoInfo = $("tamano-info"),
+      elImagenCirculo = $("imagen-circulo"), elImagenCirculoPreview = $("imagen-circulo-preview"),
+      elCirculoTamano = $("circulo-tamano"), elMostrarCirculo = $("mostrar-circulo"),
+      elCirculoComoFondo = $("circulo-como-fondo"),
+      elCopias = $("copias"), elPorHoja = $("por-hoja"), elCortes = $("cortes"),
+      elListaMaterias = $("lista-materias"), elHojas = $("hojas"),
+      elFuente = $("fuente"), elTamanioTexto = $("tamanio-texto"),
+      elColorTexto = $("color-texto"), elTextoNegrita = $("texto-negrita"),
+      elMarcoActivo = $("marco-activo"),
+      elMarcoColor = $("marco-color"),
+      elsAlineacion = document.querySelectorAll('input[name="alineacion"]');
+
+  function sincronizarFormularioConEstado(){
+    elFrase.value = estado.frase;
+    elNombre.value = estado.nombre;
+    elCurso.value = estado.curso;
+    elAnio.value = estado.anio;
+    elColegio.value = estado.colegio;
+    elTelefono.value = estado.telefono;
+    elCopias.value = estado.copias;
+    elPorHoja.value = estado.porHoja;
+    elCortes.checked = estado.cortes;
+    elFondoTextoBlanco.checked = estado.fondoTextoBlanco;
+    elFuente.value = estado.fuente;
+    elTamanioTexto.value = estado.tamanioTexto;
+    elColorTexto.value = /^#[0-9a-f]{6}$/i.test(estado.colorTexto) ? estado.colorTexto : "#20302e";
+    elTextoNegrita.checked = !!estado.textoNegrita;
+    elCirculoTamano.value = estado.circuloTam;
+    elMostrarCirculo.checked = estado.mostrarCirculo !== false;
+    elCirculoTamano.disabled = estado.mostrarCirculo === false;
+    elCirculoComoFondo.checked = !!estado.circuloComoFondo;
+    elMarcoActivo.checked = estado.marco.activo;
+    elMarcoColor.disabled = !estado.marco.activo;
+    elMarcoColor.value = /^#[0-9a-f]{6}$/i.test(estado.marco.color) ? estado.marco.color : "#c9a24e";
+    elsAlineacion.forEach(function(radio){
+      radio.checked = radio.value === estado.alineacion;
+    });
+    actualizarPreviewImagenes();
+    actualizarTamanoInfo();
+  }
+
+  function actualizarTamanoInfo(){
+    var layout = LAYOUTS[estado.porHoja] || LAYOUTS[8];
+    var anchoHoja = 21.59, altoHoja = 27.94; // carta, en cm
+    var padding = 0.8;  // 8mm de margen en cada borde
+    var gap = 0.5;      // 5mm de separación entre etiquetas
+    var anchoDisponible = anchoHoja - (padding * 2) - (gap * (layout.cols - 1));
+    var altoDisponible = altoHoja - (padding * 2) - (gap * (layout.rows - 1));
+    var ancho = anchoDisponible / layout.cols;
+    var alto = altoDisponible / layout.rows;
+    elTamanoInfo.textContent = "Tamaño real de cada etiqueta: aprox. " + ancho.toFixed(1) + " × " + alto.toFixed(1) + " cm.";
+  }
+
+  function actualizarPreviewImagenes(){
+    if(estado.imagenFondo){
+      elImagenFondoPreview.src = estado.imagenFondo;
+      elImagenFondoPreview.classList.add("activa");
+    }else{
+      elImagenFondoPreview.removeAttribute("src");
+      elImagenFondoPreview.classList.remove("activa");
+    }
+    if(estado.imagenCirculo){
+      elImagenCirculoPreview.src = estado.imagenCirculo;
+      elImagenCirculoPreview.classList.add("activa");
+    }else{
+      elImagenCirculoPreview.removeAttribute("src");
+      elImagenCirculoPreview.classList.remove("activa");
+    }
+  }
+
+  // ---------- Materias ----------
+  function renderMaterias(){
+    elListaMaterias.innerHTML = "";
+    estado.materias.forEach(function(m, i){
+      var card = document.createElement("div");
+      card.className = "materia-card";
+
+      var top = document.createElement("div");
+      top.className = "materia-card__top";
+
+      var input = document.createElement("input");
+      input.type = "text";
+      input.value = m.texto;
+      input.maxLength = 24;
+      input.placeholder = "Nombre de la materia";
+      input.setAttribute("aria-label", "Nombre de materia " + (i+1));
+      input.addEventListener("input", function(){
+        m.texto = input.value;
+        actualizar();
+      });
+
+      var btnQuitar = document.createElement("button");
+      btnQuitar.type = "button";
+      btnQuitar.className = "btn-quitar";
+      btnQuitar.innerHTML = "&times;";
+      btnQuitar.title = "Quitar materia";
+      btnQuitar.setAttribute("aria-label", "Quitar esta materia");
+      btnQuitar.disabled = estado.materias.length <= 1;
+      btnQuitar.addEventListener("click", function(){
+        estado.materias = estado.materias.filter(function(x){ return x.id !== m.id; });
+        renderMaterias();
+        actualizar();
+      });
+
+      top.appendChild(input);
+      top.appendChild(btnQuitar);
+
+      var opciones = document.createElement("div");
+      opciones.className = "materia-card__opciones";
+
+      var colorInput = document.createElement("input");
+      colorInput.type = "color";
+      colorInput.className = "color-materia";
+      colorInput.value = /^#[0-9a-f]{6}$/i.test(m.color) ? m.color : "#2c8c86";
+      colorInput.title = "Color de acento";
+      colorInput.setAttribute("aria-label", "Color de acento para " + (m.texto || "materia " + (i+1)));
+      colorInput.addEventListener("input", function(){
+        m.color = colorInput.value;
+        actualizar();
+      });
+
+      var thumb = document.createElement("label");
+      thumb.className = "mini-thumb" + (m.imagenCirculo ? " tiene-propia" : "");
+      thumb.title = m.imagenCirculo
+        ? "Esta materia tiene su propia imagen (toca para cambiarla)"
+        : "Usando la imagen general del círculo (toca para asignar una propia)";
+
+      var imagenEfectiva = m.imagenCirculo || estado.imagenCirculo;
+      if(imagenEfectiva){
+        var imgEl = document.createElement("img");
+        imgEl.src = imagenEfectiva;
+        imgEl.alt = "";
+        thumb.appendChild(imgEl);
+      }else{
+        var span = document.createElement("span");
+        span.className = "mini-thumb__icono";
+        span.textContent = "+";
+        thumb.appendChild(span);
+      }
+
+      var fileInput = document.createElement("input");
+      fileInput.type = "file";
+      fileInput.accept = "image/*";
+      fileInput.setAttribute("aria-label", "Imagen propia para " + (m.texto || "esta materia"));
+      fileInput.addEventListener("change", function(){
+        cargarArchivoComoImagen(fileInput, 320, function(dataUrl){
+          m.imagenCirculo = dataUrl;
+          renderMaterias();
+          actualizar();
+        });
+      });
+      thumb.appendChild(fileInput);
+
+      opciones.appendChild(colorInput);
+      opciones.appendChild(thumb);
+
+      if(m.imagenCirculo){
+        var btnReset = document.createElement("button");
+        btnReset.type = "button";
+        btnReset.className = "btn-mini";
+        btnReset.textContent = "Usar la general";
+        btnReset.title = "Quitar la imagen propia y usar la imagen general del círculo";
+        btnReset.addEventListener("click", function(){
+          m.imagenCirculo = null;
+          renderMaterias();
+          actualizar();
+        });
+        opciones.appendChild(btnReset);
+      }
+
+      card.appendChild(top);
+      card.appendChild(opciones);
+      elListaMaterias.appendChild(card);
+    });
+  }
+
+  function agregarMateria(texto){
+    var color = PALETA[estado.materias.length % PALETA.length].hex;
+    estado.materias.push({ id: nuevoId(), texto: texto || "", color: color, imagenCirculo: null });
+    renderMaterias();
+    actualizar();
+  }
+
+  // ---------- Construcción de etiquetas ----------
+  function iniciales(nombre){
+    var partes = String(nombre || "").trim().split(/\s+/).filter(Boolean);
+    if(!partes.length) return "✎";
+    if(partes.length === 1) return partes[0].charAt(0).toUpperCase();
+    return (partes[0].charAt(0) + partes[1].charAt(0)).toUpperCase();
+  }
+
+  function marcadorImagen(materia){
+    if(estado.mostrarCirculo === false) return "";
+    var src = (materia && materia.imagenCirculo) || estado.imagenCirculo;
+    if(src){
+      return '<img class="etiqueta__foto" src="' + src + '" alt="Foto de ' + escapar(estado.nombre || "estudiante") + '">';
+    }
+    return '<div class="etiqueta__monograma">' + escapar(iniciales(estado.nombre)) + "</div>";
+  }
+
+  function htmlEtiqueta(materia){
+    var cursoTxt = escapar(estado.curso);
+    var colegioTxt = escapar(estado.colegio);
+    var pieDerecha = estado.telefono ? "Tel: " + escapar(estado.telefono) : "";
+    var imagenCirculoEfectiva = (materia && materia.imagenCirculo) || estado.imagenCirculo;
+    var imagenFondoEfectiva = estado.imagenFondo || (estado.circuloComoFondo ? imagenCirculoEfectiva : null);
+    var tieneFondo = !!imagenFondoEfectiva;
+    var claseFondo = tieneFondo ? " etiqueta--fondo" : "";
+    if(tieneFondo && estado.fondoTextoBlanco) claseFondo += " etiqueta--panel";
+    var estiloFondo = tieneFondo ? ";background-image:url(" + imagenFondoEfectiva + ")" : "";
+    return (
+      '<article class="etiqueta' + claseFondo + '" style="--accent:' + materia.color + estiloFondo + '">' +
+        '<span class="etiqueta__materia">' + (escapar(materia.texto) || "Materia") + "</span>" +
+        '<div class="etiqueta__cuerpo">' +
+          marcadorImagen(materia) +
+          '<div class="etiqueta__datos">' +
+            (estado.frase ? '<p class="etiqueta__frase">' + escapar(estado.frase) + "</p>" : "") +
+            '<p class="etiqueta__nombre">' + (escapar(estado.nombre) || "Tu nombre aquí") + "</p>" +
+            (cursoTxt ? '<p class="etiqueta__meta">' + cursoTxt + "</p>" : "") +
+            (colegioTxt ? '<p class="etiqueta__meta">' + colegioTxt + "</p>" : "") +
+          "</div>" +
+        "</div>" +
+        '<div class="etiqueta__footer">' +
+          "<span>" + escapar(estado.anio || "") + "</span>" +
+          "<span>" + pieDerecha + "</span>" +
+        "</div>" +
+      "</article>"
+    );
+  }
+
+  function construirInstancias(){
+    var copias = Math.max(1, Math.min(12, parseInt(estado.copias, 10) || 1));
+    var instancias = [];
+    estado.materias.forEach(function(m){
+      if(!m.texto || !m.texto.trim()) return;
+      for(var i=0; i<copias; i++){ instancias.push(m); }
+    });
+    return instancias;
+  }
+
+  function renderHojas(){
+    var instancias = construirInstancias();
+    var layout = LAYOUTS[estado.porHoja] || LAYOUTS[8];
+
+    if(!instancias.length){
+      elHojas.innerHTML = '<div class="vacio">Agrega al menos una materia con texto para ver la vista previa de tu hoja.</div>';
+      return;
+    }
+
+    var porHoja = layout.cols * layout.rows;
+    var paginas = [];
+    for(var i=0; i<instancias.length; i += porHoja){
+      paginas.push(instancias.slice(i, i + porHoja));
+    }
+
+    var escala = TAMANIOS[estado.tamanioTexto] || 1;
+    var fuenteVar = FUENTES[estado.fuente] || FUENTES.moderna;
+    var circuloTam = TAMANIOS_CIRCULO[estado.circuloTam] || TAMANIOS_CIRCULO.mediano;
+
+    elHojas.innerHTML = paginas.map(function(pagina){
+      var clases = "hoja alin-" + estado.alineacion + " porhoja-" + estado.porHoja;
+      if(estado.cortes) clases += " con-cortes";
+      if(estado.marco.activo) clases += " con-marco";
+      if(estado.textoNegrita) clases += " negrita";
+      var colorTexto = /^#[0-9a-f]{6}$/i.test(estado.colorTexto) ? estado.colorTexto : "#20302e";
+      var estiloGrid = "grid-template-columns:repeat(" + layout.cols + ",1fr);grid-template-rows:repeat(" + layout.rows + ",1fr);" +
+        "--fuente:" + fuenteVar + ";--escala:" + escala + ";--marco-color:" + estado.marco.color + ";--circulo-tam:" + circuloTam + ";--texto-color:" + colorTexto + ";";
+      var etiquetasHtml = pagina.map(htmlEtiqueta).join("");
+      var piePagina = '<div class="hoja__pie-impresion">Hub Dgt ' + new Date().getFullYear() + "</div>";
+      return '<div class="' + clases + '" style="' + estiloGrid + '">' + etiquetasHtml + piePagina + "</div>";
+    }).join("");
+  }
+
+  function actualizar(){
+    guardarEstadoDebounced();
+    var circuloTam = TAMANIOS_CIRCULO[estado.circuloTam] || TAMANIOS_CIRCULO.mediano;
+    document.documentElement.style.setProperty("--circulo-tam", circuloTam);
+    renderHojas();
+  }
+
+  // ---------- Eventos de campos simples ----------
+  elFrase.addEventListener("input", function(){ estado.frase = elFrase.value; actualizar(); });
+  elNombre.addEventListener("input", function(){ estado.nombre = elNombre.value; actualizar(); });
+  elCurso.addEventListener("input", function(){ estado.curso = elCurso.value; actualizar(); });
+  elAnio.addEventListener("input", function(){ estado.anio = elAnio.value; actualizar(); });
+  elColegio.addEventListener("input", function(){ estado.colegio = elColegio.value; actualizar(); });
+  elTelefono.addEventListener("input", function(){ estado.telefono = elTelefono.value; actualizar(); });
+  elCopias.addEventListener("input", function(){ estado.copias = elCopias.value; actualizar(); });
+  elPorHoja.addEventListener("change", function(){ estado.porHoja = parseInt(elPorHoja.value, 10); actualizarTamanoInfo(); actualizar(); });
+  elCortes.addEventListener("change", function(){ estado.cortes = elCortes.checked; actualizar(); });
+  elFondoTextoBlanco.addEventListener("change", function(){ estado.fondoTextoBlanco = elFondoTextoBlanco.checked; actualizar(); });
+  elFuente.addEventListener("change", function(){ estado.fuente = elFuente.value; actualizar(); });
+  elTamanioTexto.addEventListener("change", function(){ estado.tamanioTexto = elTamanioTexto.value; actualizar(); });
+  elColorTexto.addEventListener("input", function(){ estado.colorTexto = elColorTexto.value; actualizar(); });
+  elTextoNegrita.addEventListener("change", function(){ estado.textoNegrita = elTextoNegrita.checked; actualizar(); });
+  elCirculoTamano.addEventListener("change", function(){ estado.circuloTam = elCirculoTamano.value; actualizar(); });
+  elMostrarCirculo.addEventListener("change", function(){
+    estado.mostrarCirculo = elMostrarCirculo.checked;
+    elCirculoTamano.disabled = !estado.mostrarCirculo;
+    actualizar();
+  });
+  elCirculoComoFondo.addEventListener("change", function(){
+    estado.circuloComoFondo = elCirculoComoFondo.checked;
+    actualizar();
+  });
+  elMarcoActivo.addEventListener("change", function(){
+    estado.marco.activo = elMarcoActivo.checked;
+    elMarcoColor.disabled = !estado.marco.activo;
+    actualizar();
+  });
+  elMarcoColor.addEventListener("input", function(){ estado.marco.color = elMarcoColor.value; actualizar(); });
+  elsAlineacion.forEach(function(radio){
+    radio.addEventListener("change", function(){
+      if(radio.checked){ estado.alineacion = radio.value; actualizar(); }
+    });
+  });
+
+  $("btn-agregar-materia").addEventListener("click", function(){ agregarMateria(""); });
+
+  document.querySelectorAll(".chip").forEach(function(chip){
+    chip.addEventListener("click", function(){
+      agregarMateria(chip.getAttribute("data-materia"));
+    });
+  });
+
+  function cargarArchivoComoImagen(inputEl, maxLado, onListo){
+    var archivo = inputEl.files && inputEl.files[0];
+    if(!archivo) return;
+    if(archivo.size > 12 * 1024 * 1024){
+      alert("La imagen es muy pesada. Elige una de menos de 12 MB.");
+      inputEl.value = "";
+      return;
+    }
+    var lector = new FileReader();
+    lector.onload = function(e){
+      var original = e.target.result;
+      var img = new Image();
+      img.onload = function(){
+        try{
+          var w = img.naturalWidth, h = img.naturalHeight;
+          var factor = Math.min(1, maxLado / Math.max(w, h));
+          var destW = Math.max(1, Math.round(w * factor));
+          var destH = Math.max(1, Math.round(h * factor));
+          var canvas = document.createElement("canvas");
+          canvas.width = destW; canvas.height = destH;
+          var ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, destW, destH);
+          onListo(canvas.toDataURL("image/jpeg", .82));
+        }catch(err){
+          onListo(original); // si el navegador no puede procesarla, se usa la original
+        }
+      };
+      img.onerror = function(){ onListo(original); };
+      img.src = original;
+    };
+    lector.readAsDataURL(archivo);
+  }
+
+  elImagenFondo.addEventListener("change", function(){
+    cargarArchivoComoImagen(elImagenFondo, 1100, function(dataUrl){
+      estado.imagenFondo = dataUrl;
+      actualizarPreviewImagenes();
+      actualizar();
+    });
+  });
+
+  $("btn-quitar-imagen-fondo").addEventListener("click", function(){
+    estado.imagenFondo = null;
+    elImagenFondo.value = "";
+    actualizarPreviewImagenes();
+    actualizar();
+  });
+
+  elImagenCirculo.addEventListener("change", function(){
+    cargarArchivoComoImagen(elImagenCirculo, 320, function(dataUrl){
+      estado.imagenCirculo = dataUrl;
+      actualizarPreviewImagenes();
+      renderMaterias();
+      actualizar();
+    });
+  });
+
+  $("btn-quitar-imagen-circulo").addEventListener("click", function(){
+    estado.imagenCirculo = null;
+    elImagenCirculo.value = "";
+    actualizarPreviewImagenes();
+    renderMaterias();
+    actualizar();
+  });
+
+  $("btn-imprimir").addEventListener("click", function(){ window.print(); });
+
+  $("btn-limpiar").addEventListener("click", function(){
+    if(!confirm("¿Restablecer todos los campos y empezar de nuevo?")) return;
+    estado = estadoInicial();
+    localStorage.removeItem(STORAGE_KEY);
+    elImagenFondo.value = "";
+    elImagenCirculo.value = "";
+    sincronizarFormularioConEstado();
+    renderMaterias();
+    actualizar();
+  });
+
+  // ---------- Inicio ----------
+  document.documentElement.style.setProperty("--circulo-tam", TAMANIOS_CIRCULO[estado.circuloTam] || TAMANIOS_CIRCULO.mediano);
+  sincronizarFormularioConEstado();
+  renderMaterias();
+  renderHojas();
+})();
+</script>
+</body>
+</html>

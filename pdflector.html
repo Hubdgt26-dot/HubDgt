@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF a Audio (Lector de PDF en voz alta) | Hub Dgt</title>
+  <meta name="description" content="Convierte cualquier PDF en audio directamente desde tu navegador: sube el archivo y escúchalo con voz sintetizada. Gratis, sin instalar nada y sin subir tu archivo a ningún servidor.">
+  <meta name="keywords" content="pdf a audio, lector de pdf en voz alta, texto a voz pdf, escuchar pdf, convertir pdf a voz">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#1a73e8">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="PDF a Audio | Hub Dgt">
+  <meta property="og:description" content="Escucha tus documentos PDF como audio, gratis y sin registro.">
+  <meta property="og:locale" content="es_ES">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    header {
+      background: #1a73e8;
+      color: white;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    header h1 { font-size: 18px; flex: 1; min-width: 0; }
+    #volverHub { color: white; opacity: .85; font-size: 12.5px; text-decoration: none; flex-shrink: 0; white-space: nowrap; }
+    #volverHub:hover { opacity: 1; text-decoration: underline; }
+    #nombreArchivoHeader {
+      font-size: 12px;
+      opacity: 0.85;
+      max-width: 180px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      display: none;
+    }
+    #btnCerrar {
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.4);
+      color: white;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 12px;
+      display: none;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    #btnCerrar:hover { background: rgba(255,255,255,0.35); }
+
+    /* ── Carga ── */
+    #carga {
+      padding: 40px 20px;
+      text-align: center;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+    #carga label {
+      display: inline-block;
+      background: #1a73e8;
+      color: white;
+      padding: 12px 28px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    #carga label:hover { background: #1558b0; }
+    #carga input { display: none; }
+    #nombreArchivo { color: #666; font-size: 13px; }
+
+    /* ── Spinner ── */
+    #cargando { display: none; text-align: center; padding: 60px 20px; color: #888; flex: 1; }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 4px solid #ddd;
+      border-top-color: #1a73e8;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 14px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Banner de sesión guardada ── */
+    #bannerSesion {
+      background: #e8f0fe;
+      border: 1px solid #c5d8fb;
+      border-radius: 8px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      max-width: 480px;
+      width: 100%;
+      font-size: 14px;
+      color: #333;
+      flex-wrap: wrap;
+    }
+    #bannerSesion strong { color: #1a73e8; }
+
+    /* ── App principal ── */
+    #app {
+      display: none;
+      flex-direction: row;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    /* ── Panel izquierdo: lista de páginas ── */
+    #panelPaginas {
+      width: 210px;
+      min-width: 150px;
+      background: #fff;
+      border-right: 1px solid #ddd;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      transition: width 0.25s ease, min-width 0.25s ease;
+    }
+    #panelPaginas h3 {
+      padding: 10px 12px;
+      font-size: 12px;
+      color: #666;
+      border-bottom: 1px solid #eee;
+      background: #fafafa;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    #btnTogglePanel {
+      display: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      color: #888;
+      padding: 0 2px;
+      line-height: 1;
+    }
+    #listaPaginas { overflow-y: auto; flex: 1; }
+    .itemPagina {
+      padding: 9px 12px;
+      cursor: pointer;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 13px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      transition: background 0.12s;
+    }
+    .itemPagina:hover { background: #e8f0fe; }
+    .itemPagina.activa { background: #1a73e8; color: white; }
+    .numPag {
+      background: #e0e0e0;
+      border-radius: 3px;
+      padding: 1px 5px;
+      font-size: 11px;
+      min-width: 26px;
+      text-align: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .itemPagina.activa .numPag { background: rgba(255,255,255,0.25); color: white; }
+    .previewTxt {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #888;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    .itemPagina.activa .previewTxt { color: #cfe0ff; }
+
+    /* ── Panel derecho ── */
+    #panelTexto {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    #barraSuperior {
+      background: #fff;
+      border-bottom: 1px solid #ddd;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    /* Botón hamburger para móvil */
+    #btnAbrirPanel {
+      display: none;
+      background: #f0f0f0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    #btnAbrirPanel:hover { background: #e0e0e0; }
+
+    #navPaginas { display: flex; align-items: center; gap: 4px; }
+    #navPaginas button {
+      background: #f0f0f0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 5px 10px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    #navPaginas button:hover { background: #e0e0e0; }
+    #inputPagina {
+      width: 48px;
+      text-align: center;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 5px 4px;
+      font-size: 14px;
+    }
+    #totalPaginasLabel { font-size: 13px; color: #888; white-space: nowrap; }
+
+    .sep { flex: 1; }
+
+    .btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 5px;
+      font-size: 13px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+    #btnLeerDesde  { background: #4CAF50; color: white; }
+    #btnLeerPagina { background: #1a73e8; color: white; }
+    #btnPausar     { background: #FF9800; color: white; display: none; }
+    #btnDetener    { background: #e53935; color: white; display: none; }
+    .btn:hover { opacity: 0.85; }
+
+    /* Etiquetas de botones: se ocultan en pantallas pequeñas */
+    .btnLabel { display: inline; }
+
+    #contenidoTexto {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      line-height: 1.85;
+      font-size: 15px;
+      white-space: pre-wrap;
+      background: #fff;
+    }
+
+    #barraEstado {
+      background: #fafafa;
+      border-top: 1px solid #ddd;
+      padding: 6px 14px;
+      font-size: 13px;
+      color: #666;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    #estadoLectura { font-weight: bold; color: #1a73e8; }
+
+    /* ── Overlay para móvil ── */
+    #overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 100;
+    }
+
+    /* ── RESPONSIVE ── */
+
+    /* Tablet: 768px y menos */
+    @media (max-width: 768px) {
+      #btnAbrirPanel { display: block; }
+      #btnTogglePanel { display: block; }
+
+      #panelPaginas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 260px;
+        z-index: 101;
+        transform: translateX(-100%);
+        transition: transform 0.25s ease;
+        box-shadow: 3px 0 12px rgba(0,0,0,0.2);
+      }
+      #panelPaginas.abierto {
+        transform: translateX(0);
+      }
+      #overlay.visible { display: block; }
+
+      header h1 { font-size: 16px; }
+      #nombreArchivoHeader { max-width: 120px; font-size: 11px; }
+
+      .btnLabel { display: none; }
+      .btn { padding: 6px 9px; font-size: 15px; }
+
+      #contenidoTexto { padding: 14px; font-size: 14px; }
+    }
+
+    /* Móvil pequeño: 480px y menos */
+    @media (max-width: 480px) {
+      header { padding: 10px 12px; gap: 8px; }
+      header h1 { font-size: 15px; }
+      #nombreArchivoHeader { display: none !important; }
+
+      #barraSuperior { gap: 4px; padding: 6px 8px; }
+      #navPaginas button { padding: 5px 8px; }
+      #inputPagina { width: 42px; }
+
+      #carga label { font-size: 14px; padding: 10px 20px; }
+
+      #barraEstado { font-size: 12px; gap: 8px; padding: 5px 10px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <span style="font-size:24px">📄</span>
+  <h1>PDF a Audio</h1>
+  <span id="nombreArchivoHeader"></span>
+  <button id="btnCerrar" onclick="cerrarArchivo()">✕ <span class="btnLabel">Cerrar archivo</span></button>
+  <a id="volverHub" href="index.html">← Hub Dgt</a>
+</header>
+
+<!-- Overlay móvil -->
+<div id="overlay" onclick="cerrarPanel()"></div>
+
+<!-- Carga -->
+<div id="carga">
+  <label for="pdfInput">📂 Seleccionar PDF</label>
+  <input type="file" id="pdfInput" accept="application/pdf">
+  <div id="nombreArchivo">Ningún archivo seleccionado</div>
+</div>
+
+<!-- Spinner -->
+<div id="cargando">
+  <div class="spinner"></div>
+  <div id="txtCargando">Procesando PDF...</div>
+</div>
+
+<!-- App -->
+<div id="app">
+
+  <div id="panelPaginas">
+    <h3>
+      📑 Páginas
+      <button id="btnTogglePanel" onclick="cerrarPanel()" title="Cerrar panel">✕</button>
+    </h3>
+    <div id="listaPaginas"></div>
+  </div>
+
+  <div id="panelTexto">
+
+    <div id="barraSuperior">
+      <!-- Hamburger solo en móvil/tablet -->
+      <button id="btnAbrirPanel" onclick="abrirPanel()" title="Ver páginas">☰</button>
+
+      <div id="navPaginas">
+        <button onclick="irPagina(paginaActual - 1)" title="Página anterior">◀</button>
+        <input type="number" id="inputPagina" min="1" value="1"
+               onchange="irPagina(parseInt(this.value))">
+        <span id="totalPaginasLabel">/ 0</span>
+        <button onclick="irPagina(paginaActual + 1)" title="Página siguiente">▶</button>
+      </div>
+
+      <div class="sep"></div>
+
+      <button class="btn" id="btnLeerDesde"  onclick="leerDesdeAqui()">🔊 <span class="btnLabel">Leer desde aquí</span></button>
+      <button class="btn" id="btnLeerPagina" onclick="leerSoloPagina()">📖 <span class="btnLabel">Solo esta página</span></button>
+      <button class="btn" id="btnPausar"     onclick="pausarReanudar()">⏸ <span class="btnLabel">Pausar</span></button>
+      <button class="btn" id="btnDetener"    onclick="detener()">⏹ <span class="btnLabel">Detener</span></button>
+    </div>
+
+    <div id="contenidoTexto">Selecciona una página del panel izquierdo.</div>
+
+    <div id="barraEstado">
+      <span id="estadoLectura">—</span>
+      <span id="progreso"></span>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  let paginas        = [];
+  let paginaActual   = 1;
+  let totalPaginas   = 0;
+  let nombreArchivo  = '';
+  const CHUNK_SIZE   = 2500;
+  const STORAGE_KEY  = 'pdflector_sesion';
+
+  // ── Sesión persistente ──
+  function guardarSesion() {
+    if (!nombreArchivo || paginas.length === 0) return;
+    try {
+      const sesion = { nombre: nombreArchivo, pagina: paginaActual, paginas, total: totalPaginas };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(sesion));
+    } catch(e) { /* sin localStorage o cuota excedida */ }
+  }
+
+  function cargarSesionGuardada() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch(e) { return null; }
+  }
+
+  function borrarSesion() {
+    try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+  }
+
+  // ── Al cargar la página: mostrar banner si hay sesión ──
+  window.addEventListener('DOMContentLoaded', () => {
+    const sesion = cargarSesionGuardada();
+    if (sesion && sesion.nombre && sesion.paginas && sesion.paginas.length > 0) {
+      mostrarBannerSesion(sesion);
+    }
+  });
+
+  // ── Guardar sesión cuando el usuario cambia de página o cierra ──
+  window.addEventListener('beforeunload', () => guardarSesion());
+
+  function mostrarBannerSesion(sesion) {
+    const banner = document.createElement('div');
+    banner.id = 'bannerSesion';
+    banner.innerHTML = `
+      <span>📖 Última sesión: <strong>${sesion.nombre}</strong> — pág. ${sesion.pagina} de ${sesion.total}</span>
+      <div style="display:flex;gap:8px;flex-shrink:0">
+        <button onclick="restaurarSesion()" style="background:#1a73e8;color:white;border:none;padding:6px 14px;border-radius:5px;cursor:pointer;font-size:13px">↩ Continuar</button>
+        <button onclick="descartarSesion()" style="background:#e0e0e0;color:#333;border:none;padding:6px 12px;border-radius:5px;cursor:pointer;font-size:13px">✕</button>
+      </div>
+    `;
+    document.getElementById('carga').prepend(banner);
+  }
+
+  function restaurarSesion() {
+    const sesion = cargarSesionGuardada();
+    if (!sesion) return;
+    paginas       = sesion.paginas;
+    totalPaginas  = sesion.total;
+    nombreArchivo = sesion.nombre;
+
+    document.getElementById('carga').style.display    = 'none';
+    document.getElementById('app').style.display      = 'flex';
+    document.getElementById('totalPaginasLabel').textContent = `/ ${totalPaginas}`;
+    document.getElementById('inputPagina').max = totalPaginas;
+    document.getElementById('nombreArchivoHeader').textContent = '📂 ' + nombreArchivo;
+    document.getElementById('nombreArchivoHeader').style.display = 'block';
+    document.getElementById('btnCerrar').style.display = 'inline-flex';
+
+    construirLista();
+    irPagina(sesion.pagina || 1);
+    document.getElementById('estadoLectura').textContent = `📌 Retomando en pág. ${sesion.pagina}`;
+  }
+
+  function descartarSesion() {
+    borrarSesion();
+    const banner = document.getElementById('bannerSesion');
+    if (banner) banner.remove();
+  }
+
+  // ── Panel móvil ──
+  function abrirPanel() {
+    document.getElementById('panelPaginas').classList.add('abierto');
+    document.getElementById('overlay').classList.add('visible');
+  }
+  function cerrarPanel() {
+    document.getElementById('panelPaginas').classList.remove('abierto');
+    document.getElementById('overlay').classList.remove('visible');
+  }
+
+  // ── Carga del archivo ──
+  document.getElementById('pdfInput').addEventListener('change', async function () {
+    const file = this.files[0];
+    if (!file) return;
+    document.getElementById('nombreArchivo').textContent = file.name;
+    await cargarPDF(file);
+  });
+
+  async function cargarPDF(file) {
+    detener();
+    paginas       = [];
+    nombreArchivo = file.name;
+
+    document.getElementById('carga').style.display    = 'none';
+    document.getElementById('cargando').style.display = 'block';
+    document.getElementById('app').style.display      = 'none';
+
+    try {
+      const buffer = await file.arrayBuffer();
+      const pdf    = await pdfjsLib.getDocument({ data: new Uint8Array(buffer) }).promise;
+      totalPaginas = pdf.numPages;
+
+      for (let i = 1; i <= totalPaginas; i++) {
+        document.getElementById('txtCargando').textContent =
+          `Procesando página ${i} de ${totalPaginas}...`;
+        const page    = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        const txt     = content.items.map(it => it.str).join(' ').trim();
+        paginas.push(txt);
+      }
+
+      document.getElementById('cargando').style.display = 'none';
+      document.getElementById('app').style.display      = 'flex';
+      document.getElementById('totalPaginasLabel').textContent = `/ ${totalPaginas}`;
+      document.getElementById('inputPagina').max = totalPaginas;
+
+      document.getElementById('nombreArchivoHeader').textContent = '📂 ' + file.name;
+      document.getElementById('nombreArchivoHeader').style.display = 'block';
+      document.getElementById('btnCerrar').style.display = 'inline-flex';
+
+      construirLista();
+
+      // Si hay sesión del mismo archivo, retomar página
+      const sesion = cargarSesionGuardada();
+      const paginaInicio = (sesion && sesion.nombre === file.name && sesion.pagina)
+        ? sesion.pagina : 1;
+      irPagina(paginaInicio);
+      if (sesion && sesion.nombre === file.name && sesion.pagina > 1)
+        document.getElementById('estadoLectura').textContent = `📌 Retomando en pág. ${paginaInicio}`;
+
+    } catch (err) {
+      document.getElementById('cargando').style.display = 'none';
+      document.getElementById('carga').style.display    = 'block';
+      alert('❌ Error al leer el PDF: ' + err.message);
+    }
+  }
+
+  // ── Lista lateral ──
+  function construirLista() {
+    const lista = document.getElementById('listaPaginas');
+    lista.innerHTML = '';
+    paginas.forEach((txt, i) => {
+      const num     = i + 1;
+      const preview = txt.slice(0, 55).replace(/\s+/g, ' ') || '(sin texto)';
+      const div     = document.createElement('div');
+      div.className = 'itemPagina';
+      div.id        = `pag-${num}`;
+      div.innerHTML =
+        `<span class="numPag">${num}</span><span class="previewTxt">${preview}</span>`;
+      div.onclick   = () => { irPagina(num); cerrarPanel(); };
+      lista.appendChild(div);
+    });
+  }
+
+  // ── Navegación ──
+  function irPagina(num) {
+    if (num < 1 || num > totalPaginas) return;
+    paginaActual = num;
+    document.getElementById('inputPagina').value = num;
+
+    document.querySelectorAll('.itemPagina').forEach(el => el.classList.remove('activa'));
+    const item = document.getElementById(`pag-${num}`);
+    if (item) { item.classList.add('activa'); item.scrollIntoView({ block: 'nearest' }); }
+
+    const txt = paginas[num - 1] || '(página sin texto)';
+    document.getElementById('contenidoTexto').textContent = txt;
+
+    guardarSesion(); // guardar cada vez que cambia de página
+  }
+
+  // ── Leer desde la página actual hasta el final ──
+  function leerDesdeAqui() {
+    const txt = paginas.slice(paginaActual - 1).join('\n\n');
+    if (!txt.trim()) { alert('No hay texto en esta sección.'); return; }
+
+    const offsets = [];
+    let pos = 0;
+    for (let p = paginaActual; p <= totalPaginas; p++) {
+      offsets.push({ pag: p, desde: pos });
+      pos += (paginas[p - 1] || '').length + 2;
+    }
+
+    iniciarLectura(txt, offsets, paginaActual);
+  }
+
+  // ── Leer solo la página actual ──
+  function leerSoloPagina() {
+    const txt = paginas[paginaActual - 1] || '';
+    if (!txt.trim()) { alert('Esta página no tiene texto.'); return; }
+    iniciarLectura(txt, [{ pag: paginaActual, desde: 0 }], paginaActual);
+  }
+
+  // ── Motor de lectura ──
+  function iniciarLectura(textoCompleto, offsets, paginaInicio) {
+    window.speechSynthesis.cancel();
+
+    const fragmentos = [];
+    for (let i = 0; i < textoCompleto.length; i += CHUNK_SIZE)
+      fragmentos.push(textoCompleto.slice(i, i + CHUNK_SIZE));
+
+    let idx = 0, charsLeidos = 0;
+
+    document.getElementById('btnPausar').style.display  = 'inline-flex';
+    document.getElementById('btnDetener').style.display = 'inline-flex';
+    document.getElementById('estadoLectura').textContent = '🔊 Leyendo...';
+
+    function estimarPagina() {
+      for (let i = offsets.length - 1; i >= 0; i--)
+        if (charsLeidos >= offsets[i].desde) return offsets[i].pag;
+      return paginaInicio;
+    }
+
+    function siguiente() {
+      if (idx >= fragmentos.length) { finLectura(); return; }
+
+      const utter  = new SpeechSynthesisUtterance(fragmentos[idx]);
+      utter.lang   = 'es-ES';
+      utter.rate   = 1;
+      utter.pitch  = 1;
+
+      utter.onstart = () => {
+        const pEst = estimarPagina();
+        if (pEst !== paginaActual) irPagina(pEst);
+        document.getElementById('progreso').textContent =
+          `Fragmento ${idx + 1} / ${fragmentos.length}  ·  Pág. ${paginaActual}`;
+      };
+      utter.onend = () => {
+        charsLeidos += fragmentos[idx].length;
+        idx++;
+        siguiente();
+      };
+      utter.onerror = (e) => {
+        if (e.error !== 'interrupted')
+          document.getElementById('estadoLectura').textContent = '❌ Error: ' + e.error;
+      };
+
+      window.speechSynthesis.speak(utter);
+    }
+
+    siguiente();
+  }
+
+  function cerrarArchivo() {
+    guardarSesion(); // guardar antes de cerrar
+    detener();
+    paginas       = [];
+    paginaActual  = 1;
+    totalPaginas  = 0;
+    nombreArchivo = '';
+
+    document.getElementById('app').style.display            = 'none';
+    document.getElementById('carga').style.display          = 'block';
+    document.getElementById('nombreArchivo').textContent    = 'Ningún archivo seleccionado';
+    document.getElementById('nombreArchivoHeader').style.display = 'none';
+    document.getElementById('btnCerrar').style.display      = 'none';
+    document.getElementById('listaPaginas').innerHTML        = '';
+    document.getElementById('contenidoTexto').textContent   = 'Selecciona una página del panel izquierdo.';
+    document.getElementById('estadoLectura').textContent    = '—';
+    document.getElementById('progreso').textContent         = '';
+    document.getElementById('inputPagina').value            = 1;
+    document.getElementById('totalPaginasLabel').textContent = '/ 0';
+
+    document.getElementById('pdfInput').value = '';
+    cerrarPanel();
+
+    // Mostrar banner de sesión guardada si hay datos
+    const sesion = cargarSesionGuardada();
+    if (sesion && !document.getElementById('bannerSesion')) mostrarBannerSesion(sesion);
+  }
+
+  function finLectura() {
+    document.getElementById('estadoLectura').textContent = '✅ Lectura finalizada';
+    document.getElementById('progreso').textContent      = '';
+    document.getElementById('btnPausar').style.display   = 'none';
+    document.getElementById('btnDetener').style.display  = 'none';
+    document.getElementById('btnPausar').innerHTML       = '⏸ <span class="btnLabel">Pausar</span>';
+  }
+
+  function pausarReanudar() {
+    const btn = document.getElementById('btnPausar');
+    if (window.speechSynthesis.paused) {
+      window.speechSynthesis.resume();
+      btn.innerHTML = '⏸ <span class="btnLabel">Pausar</span>';
+      document.getElementById('estadoLectura').textContent = '🔊 Leyendo...';
+    } else {
+      window.speechSynthesis.pause();
+      btn.innerHTML = '▶️ <span class="btnLabel">Reanudar</span>';
+      document.getElementById('estadoLectura').textContent = '⏸ Pausado';
+    }
+  }
+
+  function detener() {
+    window.speechSynthesis.cancel();
+    document.getElementById('estadoLectura').textContent = '⏹ Detenido';
+    document.getElementById('progreso').textContent      = '';
+    document.getElementById('btnPausar').style.display   = 'none';
+    document.getElementById('btnDetener').style.display  = 'none';
+    document.getElementById('btnPausar').innerHTML       = '⏸ <span class="btnLabel">Pausar</span>';
+  }
+</script>
+</body>
+</html>
