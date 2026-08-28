@@ -142,6 +142,7 @@
   footer .social a{opacity:.85;}
   footer .social a:hover{opacity:1; color:var(--sage);}
   footer .fine{width:100%; text-align:center; font-size:11.5px; opacity:.5; margin-top:20px;}
+  footer .visitas{width:100%; text-align:center; font-size:11.5px; opacity:.5; margin-top:20px;}
 
   /* ---------- contacto ---------- */
   .contacto-wrap{background:#fff; border-top:1px solid #e6ded0; border-bottom:1px solid #e6ded0;}
@@ -498,6 +499,7 @@
         <a href="https://www.facebook.com/profile.php?id=61592613455827" target="_blank" rel="noopener">Facebook</a>
       </div>
       <div class="fine">© 2026 Hub Dgt — Recursos digitales que suman valor a tu día a día</div>
+      <div class="visitas">Visitas:<span id="contador-visitas">...</span></div>
     </div>
   </footer>
 
@@ -532,6 +534,17 @@
       reject.addEventListener("click", function(){ respond("rejected"); });
     })();
   </script>
-
+<script>
+    (function(){
+      var el=document.getElementById("contador-visitas"):
+      if(!el)return;
+      var url:"https://api.counterapi.dev/v1/hubdgt-site/visitas-home/up";
+      fetch(url)
+      .then(function(res){return res.json();})
+      .then(function(data){el.textContent=data.count;})
+      .catch(function(){el.textContent="--";});
+    })();
+  </script>
+  
 </body>
 </html>
